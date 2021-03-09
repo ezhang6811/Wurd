@@ -98,6 +98,19 @@ void StudentTextEditor::del() {
 void StudentTextEditor::backspace() {
 	if (m_row == 0 && m_col == 0)
 		return;
+	if (m_col == 0 || (*text_it).size() == 0)
+	{
+		string prevLine = *text_it;
+
+		//keep iterator to current line to delete later
+		list<string>::iterator temp = text_it;
+		text_it--;
+		m_col = (*text_it).size();
+		(*text_it) += prevLine;
+		m_text.erase(temp);
+		m_row--;
+		return;
+	}
 	if (atEndOfLine())
 	{
 		(*text_it) = (*text_it).substr(0, m_col - 1);
@@ -110,10 +123,11 @@ void StudentTextEditor::insert(char ch) {
 	if (atEndOfLine())
 	{
 		(*text_it) += ch;
-		m_col++;
-		return;
 	}
-	*text_it = (*text_it).substr(0, m_col) + ch + (*text_it).substr(m_col, (*text_it).size() - m_col);
+	else
+	{
+		*text_it = (*text_it).substr(0, m_col) + ch + (*text_it).substr(m_col, (*text_it).size() - m_col);
+	}
 	m_col++;
 }
 
@@ -121,7 +135,7 @@ void StudentTextEditor::enter() {
 	//enter at end of lines
 	if (atEndOfLine())
 	{
-		if (m_row == m_text.size() - 1)
+		if (m_row == m_text.size() - 1)	//last line of text
 		{
 			m_text.push_back("");
 			text_it++;
@@ -132,10 +146,18 @@ void StudentTextEditor::enter() {
 			m_text.insert(text_it, "");
 			text_it--;
 		}
-
-		m_row++;
-		m_col = 0;
 	}
+	else
+	{
+		string nextLine = (*text_it).substr(m_col, (*text_it).size() - m_col);
+		*text_it = (*text_it).substr(0, m_col);
+		text_it++;
+		m_text.insert(text_it, nextLine);
+		text_it--;
+	}
+
+	m_row++;
+	m_col = 0;
 }
 
 void StudentTextEditor::getPos(int& row, int& col) const {
