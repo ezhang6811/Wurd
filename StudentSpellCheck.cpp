@@ -65,6 +65,8 @@ bool StudentSpellCheck::spellCheck(std::string word, int max_suggestions, std::v
 		return true;
 
 	//at this point, the word is not in dictionary
+	suggestions.clear();
+
 	for (int i = 0; i < word.length(); i++)
 	{
 		string newWord;
