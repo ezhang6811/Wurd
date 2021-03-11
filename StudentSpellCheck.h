@@ -15,7 +15,17 @@ public:
 	void spellCheckLine(const std::string& line, std::vector<Position>& problems);
 
 private:
+	struct Node
+	{
+		char letter;
+		std::vector<Node*> nextLetter;
+	};
 
+	Node* trieRoot;
+
+	bool inDictionary(std::string word);
+
+	bool partOfWord(char ch) { return (isalpha(ch) || ch == '\''); }
 };
 
 #endif  // STUDENTSPELLCHECK_H_

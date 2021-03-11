@@ -13,10 +13,10 @@ public:
 
 private:
 
-	std::stack<Action> m_actions;
+	std::stack<Action> m_action;
 	std::stack<int> m_row;
 	std::stack<int> m_col;
-	std::stack<char> m_chars;
+	std::stack<char> m_char;
 };
 
 #endif // STUDENTUNDO_H_

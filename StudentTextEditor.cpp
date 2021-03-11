@@ -79,20 +79,55 @@ void StudentTextEditor::move(Dir dir) {
 		break;
 	case (Dir::LEFT):
 		if (m_col != 0)
-		{
 			m_col--;
+		else if (m_row != 0)
+		{
+			m_row--;
+			text_it--;
+			m_col = (*text_it).size();
 		}
 		break;
 	case (Dir::RIGHT):
 		if (m_col != (*text_it).size())
 			m_col++;
+		else if (m_row != m_text.size() - 1)
+		{
+			m_row++;
+			text_it++;
+			m_col = 0;
+		}
+		break;
+	case (Dir::HOME):
+		m_col = 0;
+		break;
+	case (Dir::END):
+		m_col = (*text_it).size();
 		break;
 	}
 
 }
 
 void StudentTextEditor::del() {
-	// TODO
+	if (atEndOfLine())
+	{
+		if (m_text.size() == 1 || m_row == (*text_it).size() - 1)
+			return;
+
+		text_it++;
+		string nextLine = *text_it;
+
+		//keep iterator to current line to delete later
+		list<string>::iterator temp = text_it;
+		text_it--;
+		(*text_it) += nextLine;
+		m_text.erase(temp);
+
+		getUndo()->submit(Undo::Action::JOIN, m_row, m_col);
+		return;
+	}
+	char deletedCh = (*text_it).at(m_col);
+	(*text_it) = (*text_it).substr(0, m_col) + (*text_it).substr(m_col + 1, ((*text_it).size() - m_col - 1));
+	getUndo()->submit(Undo::Action::DELETE, m_row, m_col, deletedCh);
 }
 
 void StudentTextEditor::backspace() {
@@ -109,29 +144,52 @@ void StudentTextEditor::backspace() {
 		(*text_it) += prevLine;
 		m_text.erase(temp);
 		m_row--;
+
+		getUndo()->submit(Undo::Action::JOIN, m_row, m_col);
+		
 		return;
 	}
-	if (atEndOfLine())
-	{
-		(*text_it) = (*text_it).substr(0, m_col - 1);
-		m_col--;
-		return;
-	}
+
+	char deletedCh = (*text_it).at(m_col - 1);
+	(*text_it) = (*text_it).substr(0, m_col - 1) + (*text_it).substr(m_col, ((*text_it).size() - m_col));
+	m_col--;
+	getUndo()->submit(Undo::Action::DELETE, m_row, m_col, deletedCh);
 }
 
 void StudentTextEditor::insert(char ch) {
 	if (atEndOfLine())
 	{
-		(*text_it) += ch;
+		if (ch == '\t')
+		{
+			(*text_it += "    ");
+			m_col += 4;
+		}
+		else
+		{
+			(*text_it) += ch;
+			m_col++;
+		}
 	}
 	else
 	{
-		*text_it = (*text_it).substr(0, m_col) + ch + (*text_it).substr(m_col, (*text_it).size() - m_col);
+		if (ch == '\t')
+		{
+			*text_it = (*text_it).substr(0, m_col) + "    " + (*text_it).substr(m_col, (*text_it).size() - m_col);
+			m_col += 4;
+		}
+		else
+		{
+			*text_it = (*text_it).substr(0, m_col) + ch + (*text_it).substr(m_col, (*text_it).size() - m_col);
+			m_col++;
+		}
 	}
-	m_col++;
+
+	getUndo()->submit(Undo::Action::INSERT, m_row, m_col, ch);
 }
 
 void StudentTextEditor::enter() {
+
+	getUndo()->submit(Undo::Action::SPLIT, m_row, m_col);
 	//enter at end of lines
 	if (atEndOfLine())
 	{
@@ -184,5 +242,8 @@ int StudentTextEditor::getLines(int startRow, int numRows, std::vector<std::stri
 }
 
 void StudentTextEditor::undo() {
-	// TODO
+	int count;
+	string text;
+
+	Undo::Action undoAction = getUndo()->get(m_row, m_col, count, text);
 }
