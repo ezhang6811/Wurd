@@ -57,10 +57,6 @@ bool StudentSpellCheck::load(std::string dictionaryFile) {
 }
 
 bool StudentSpellCheck::spellCheck(std::string word, int max_suggestions, std::vector<std::string>& suggestions) {
-	//set word to lowercase
-	for (int i = 0; i < word.length(); i++)
-		word[i] = tolower(word[i]);
-
 	if (inDictionary(word))
 		return true;
 
@@ -103,6 +99,10 @@ void StudentSpellCheck::spellCheckLine(const std::string& line, std::vector<Spel
 
 bool StudentSpellCheck::inDictionary(string word)
 {
+	//set word to lowercase
+	for (int i = 0; i < word.length(); i++)
+		word[i] = tolower(word[i]);
+
 	Node* n = trieRoot;
 	bool inDictionary = true;
 	for (int i = 0; i < word.length(); i++)

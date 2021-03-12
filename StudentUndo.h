@@ -13,10 +13,17 @@ public:
 
 private:
 
-	std::stack<Action> m_action;
-	std::stack<int> m_row;
-	std::stack<int> m_col;
-	std::stack<char> m_char;
+	struct UndoAction
+	{
+		Action m_action;
+		int m_row;
+		int m_col;
+		char m_char;
+	};
+
+	std::stack<UndoAction> m_actions;
+
+	void popStacks();
 };
 
 #endif // STUDENTUNDO_H_

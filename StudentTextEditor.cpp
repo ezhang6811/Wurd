@@ -22,11 +22,10 @@ StudentTextEditor::StudentTextEditor(Undo* undo)
 
 StudentTextEditor::~StudentTextEditor()
 {
-	// TODO
+	m_text.clear();
 }
 
 bool StudentTextEditor::load(std::string file) {
-
 	ifstream infile(file);
 	if (!infile)
 		return false;
@@ -45,7 +44,17 @@ bool StudentTextEditor::load(std::string file) {
 }
 
 bool StudentTextEditor::save(std::string file) {
-	return false;  // TODO
+	ofstream outfile(file);
+
+	if (!outfile)
+		return false;
+
+	for (list<string>::iterator it = m_text.begin(); it != m_text.end(); it++)
+	{
+		outfile << *it << endl;
+	}
+
+	return true;
 }
 
 void StudentTextEditor::reset() {
@@ -184,7 +193,13 @@ void StudentTextEditor::insert(char ch) {
 		}
 	}
 
-	getUndo()->submit(Undo::Action::INSERT, m_row, m_col, ch);
+	if (ch == '\t')
+	{
+		for (int i = 3; i >= 0; i--)
+			getUndo()->submit(Undo::Action::INSERT, m_row, m_col - i, ' ');
+	}
+	else
+		getUndo()->submit(Undo::Action::INSERT, m_row, m_col, ch);
 }
 
 void StudentTextEditor::enter() {
@@ -249,20 +264,44 @@ void StudentTextEditor::undo() {
 	Undo::Action undoAction = getUndo()->get(m_row, m_col, count, text);
 
 	while (m_row < prevRow)
-		text_it++;
-	while (prevRow > m_row)
+	{
 		text_it--;
+		prevRow--;
+	}
+	while (prevRow < m_row)
+	{
+		text_it++;
+		prevRow++;
+	}
 
 	switch (undoAction)
 	{
 	case Undo::Action::INSERT:
 		*text_it = (*text_it).substr(0, m_col) + text + (*text_it).substr(m_col, (*text_it).size() - m_col);
-		m_col += text.length();
 		break;
 	case Undo::Action::DELETE:
 		*text_it = (*text_it).substr(0, m_col - count) + (*text_it).substr(m_col, (*text_it).size() - m_col);
 		m_col -= count;
 		break;
+	case Undo::Action::SPLIT:
+	{
+		string nextLine = (*text_it).substr(m_col, (*text_it).size() - m_col);
+		*text_it = (*text_it).substr(0, m_col);
+		text_it++;
+		m_text.insert(text_it, nextLine);
+		text_it--;
+		text_it--;
+		break;
 	}
-
+	case Undo::Action::JOIN:
+	{
+		text_it++;
+		string nextLine = *text_it;
+		list<string>::iterator temp = text_it;
+		text_it--;
+		(*text_it) += nextLine;
+		m_text.erase(temp);
+		break;
+	}
+	}
 }
